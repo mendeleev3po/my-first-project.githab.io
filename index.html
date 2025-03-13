@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Подсчёт выпускников</title>
+  <title>Подсчёт выпускников с сохранением</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .hidden { display: none; }
@@ -41,7 +41,7 @@
   </div>
   
   <script>
-    // Массив с интервалами выпускных годов
+    // Массив интервалов выпускных годов
     const intervals = [
       '1960-1964',
       '1965-1969',
@@ -57,9 +57,6 @@
       '2015-2019'
     ];
     
-    // Объект для хранения количества выпускников для каждого интервала
-    const counts = {};
-    
     // Получаем элементы страницы
     const intervalsDiv = document.getElementById('intervals');
     const counterSection = document.getElementById('counterSection');
@@ -69,21 +66,32 @@
     const decrementBtn = document.getElementById('decrement');
     const backBtn = document.getElementById('back');
     
-    // Переменная для хранения текущего выбранного интервала
-    let currentInterval = null;
+    // Загружаем сохранённые данные из localStorage или создаем новый объект
+    let counts = JSON.parse(localStorage.getItem('counts'));
+    if (!counts) {
+      counts = {};
+      intervals.forEach(interval => {
+        counts[interval] = 0;
+      });
+      localStorage.setItem('counts', JSON.stringify(counts));
+    }
     
-    // Функция обновления отображения количества под кнопкой для интервала
+    // Функция обновления localStorage
+    function updateLocalStorage() {
+      localStorage.setItem('counts', JSON.stringify(counts));
+    }
+    
+    // Функция обновления отображения количества для выбранного интервала
     function updateIntervalDisplay(interval, container) {
       const countDisplay = container.querySelector('.count-display');
       countDisplay.textContent = 'Всего: ' + counts[interval];
     }
     
+    // Переменная для хранения текущего выбранного интервала
+    let currentInterval = null;
+    
     // Создаем кнопки и контейнеры для каждого интервала
     intervals.forEach(interval => {
-      // Инициализируем счетчик для интервала
-      counts[interval] = 0;
-      
-      // Создаем контейнер для кнопки и текста
       const container = document.createElement('div');
       container.className = 'interval-container';
       
@@ -93,7 +101,6 @@
       btn.className = 'button';
       btn.addEventListener('click', () => {
         currentInterval = interval;
-        // Переход к секции счетчика
         intervalsDiv.classList.add('hidden');
         counterSection.classList.remove('hidden');
         intervalTitle.textContent = 'Период ' + interval;
@@ -110,21 +117,23 @@
       intervalsDiv.appendChild(container);
     });
     
-    // Обработчик увеличения счетчика
+    // Обработчик кнопки увеличения счетчика
     incrementBtn.addEventListener('click', () => {
       counts[currentInterval]++;
       counterDisplay.textContent = counts[currentInterval];
+      updateLocalStorage();
     });
     
-    // Обработчик уменьшения счетчика с проверкой на отрицательное значение
+    // Обработчик кнопки уменьшения счетчика (без отрицательных значений)
     decrementBtn.addEventListener('click', () => {
       if (counts[currentInterval] > 0) {
         counts[currentInterval]--;
         counterDisplay.textContent = counts[currentInterval];
+        updateLocalStorage();
       }
     });
     
-    // Обработчик кнопки "Назад" для возврата к выбору интервалов
+    // Обработчик кнопки "Назад"
     backBtn.addEventListener('click', () => {
       // Обновляем отображение для выбранного интервала
       const containers = intervalsDiv.getElementsByClassName('interval-container');
